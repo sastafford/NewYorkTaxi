@@ -1,0 +1,7 @@
+{
+  "cluster_name": "Simulator",
+  "spark_version": "6.5.x-scala2.11",
+  "num_workers": 1,
+  "node_type_id": "Standard_DS3_v2",
+  "autotermination_minutes": 30
+}
