@@ -1,5 +1,7 @@
 # NYC Taxis
 
+PLEASE NOTE THAT THIS IS STILL INCOMPLETE
+
 ## Setup
 
 ### Download the Databricks CLI
