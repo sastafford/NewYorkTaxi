@@ -1,0 +1,19 @@
+{
+  "name": "Taxi_Simulator",
+  "new_cluster": {
+    "spark_version": "6.5.x-scala2.11",
+    "num_workers": 1,
+    "node_type_id": "Standard_DS3_v2"
+  },
+  "email_notifications": {},
+  "timeout_seconds": 0,
+  "schedule": {
+    "quartz_cron_expression": "0 */10 * * * ?",
+    "timezone_id": "US/Eastern"
+  },
+  "notebook_task": {
+    "notebook_path": "/Shared/NewYorkTaxi/DataPipeline/1_Azure_LandingZone_Simulator",
+    "revision_timestamp": 0
+  },
+  "max_concurrent_runs": 1
+}

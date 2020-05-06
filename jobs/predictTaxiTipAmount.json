@@ -1,0 +1,27 @@
+{
+  "name": "1_PredictTipAmountForTaxiZones",
+  "new_cluster": {
+    "spark_version": "6.5.x-cpu-ml-scala2.11",
+    "spark_conf": {
+      "spark.databricks.delta.preview.enabled": "true"
+    },
+    "node_type_id": "Standard_DS5_v2",
+    "driver_node_type_id": "Standard_DS5_v2",
+    "enable_elastic_disk": true,
+    "autoscale": {
+      "min_workers": 2,
+      "max_workers": 8
+    }
+  },
+  "email_notifications": {},
+  "timeout_seconds": 0,
+  "schedule": {
+    "quartz_cron_expression": "0 0 8 * * ?",
+    "timezone_id": "US/Eastern"
+  },
+  "notebook_task": {
+    "notebook_path": "/Shared/NewYork/Models/1_PredictTipAmountForTaxiZones",
+    "revision_timestamp": 0
+  },
+  "max_concurrent_runs": 1
+}
