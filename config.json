@@ -6,8 +6,8 @@
             "service": "workspace",
             "properties": {
                 "object_type": "NOTEBOOK",
-                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/0_Mount_Azure_Blob_Storage",
-                "source_path": "./notebooks/0_Setup/0_Mount_Azure_Blob_Storage.py"
+                "path": "%WORKSPACE_HOME%/nyc-taxi/init/0_MountAzureBlobStorage",
+                "source_path": "./notebooks/init/0_MountAzureBlobStorage.py"
             }
         },
         {
@@ -15,8 +15,8 @@
             "service": "workspace",
             "properties": {
                 "object_type": "NOTEBOOK",
-                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/1_SetInitial_Timestamp",
-                "source_path": "./notebooks/0_Setup/1_Set_Initial_Timestamp.py"
+                "path": "%WORKSPACE_HOME%/nyc-taxi/init/1_SetInitialTimestamp",
+                "source_path": "./notebooks/init/1_SetInitialTimestamp.py"
             }
         },
         {
@@ -24,8 +24,8 @@
             "service": "workspace",
             "properties": {
                 "object_type": "NOTEBOOK",
-                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/2_SetupTaxiMetadata",
-                "source_path": "./notebooks/0_Setup/2_SetupTaxiMetadata.py"
+                "path": "%WORKSPACE_HOME%/nyc-taxi/init/2_SetupTaxiMetadata",
+                "source_path": "./notebooks/init/2_SetupTaxiMetadata.py"
             }
         },
         {
@@ -33,8 +33,80 @@
             "service": "workspace",
             "properties": {
                 "object_type": "NOTEBOOK",
-                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/3_CreateNycTaxiDatabase",
-                "source_path": "./notebooks/0_Setup/3_CreateNycTaxiDatabase.py"
+                "path": "%WORKSPACE_HOME%/nyc-taxi/init/3_CreateNycTaxiDatabase",
+                "source_path": "./notebooks/init/3_CreateNycTaxiDatabase.py"
+            }
+        },
+        {
+            "id": "ClearMlFlowRegistry",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/models/0_ClearMlFlowRegistry",
+                "source_path": "./notebooks/models/0_ClearMlFlowRegistry.py"
+            }
+        },
+        {
+            "id": "PredictTipAmountForTaxiZones",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/models/1_PredictTipAmountForTaxiZones",
+                "source_path": "./notebooks/models/1_PredictTipAmountForTaxiZones.py"
+            }
+        },
+        {
+            "id": "LandingZoneSimulator",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/pipelines/1_LandingZoneSimulator",
+                "source_path": "./notebooks/pipelines/1_LandingZoneSimulator.py"
+            }
+        },
+        {
+            "id": "ToBronze",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/pipelines/2_ToBronze",
+                "source_path": "./notebooks/pipelines/2_ToBronze.py"
+            }
+        },
+        {
+            "id": "ToSilver",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/pipelines/3_ToSilver",
+                "source_path": "./notebooks/pipelines/3_ToSilver.py"
+            }
+        },
+        {
+            "id": "ToGold",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/pipelines/4_ToGold",
+                "source_path": "./notebooks/pipelines/4_ToGold.py"
+            }
+        },
+        {
+            "id": "ToAzureEventHubs",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/pipelines/5_ToAzureEventHubs",
+                "source_path": "./notebooks/pipelines/5_ToAzureEventHubs.scala"
+            }
+        },
+        {
+            "id": "SimpleDashboard",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/reports/SimpleDashboard",
+                "source_path": "./notebooks/reports/SimpleDashboard.py"
             }
         }
     ]
