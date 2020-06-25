@@ -1,3 +1,4 @@
 .DS_Store
 *sublime*
 *.deployed.json
+*-new.json

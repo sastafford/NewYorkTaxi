@@ -1,0 +1,41 @@
+{
+    "name": "nyc-taxi-stack",
+    "resources": [
+        {
+            "id": "SetupTexiMetadata",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/0_Mount_Azure_Blob_Storage",
+                "source_path": "./notebooks/0_Setup/0_Mount_Azure_Blob_Storage.py"
+            }
+        },
+        {
+            "id": "SetInitialTimestamp",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/1_SetInitial_Timestamp",
+                "source_path": "./notebooks/0_Setup/1_Set_Initial_Timestamp.py"
+            }
+        },
+        {
+            "id": "SetupTaxiMetadata",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/2_SetupTaxiMetadata",
+                "source_path": "./notebooks/0_Setup/2_SetupTaxiMetadata.py"
+            }
+        },
+        {
+            "id": "CreateNycTaxiDatabase",
+            "service": "workspace",
+            "properties": {
+                "object_type": "NOTEBOOK",
+                "path": "%WORKSPACE_HOME%/nyc-taxi/0_Setup/3_CreateNycTaxiDatabase",
+                "source_path": "./notebooks/0_Setup/3_CreateNycTaxiDatabase.py"
+            }
+        }
+    ]
+}
