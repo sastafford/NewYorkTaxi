@@ -15,6 +15,12 @@ from mlflow.tracking import MlflowClient
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC set spark.databricks.delta.properties.defaults.autoOptimize.optimizeWrite = true;
+# MAGIC set spark.databricks.delta.properties.defaults.autoOptimize.autoCompact = true;
+
+# COMMAND ----------
+
 # DBTITLE 1,Get latest NYC Taxi Tip Model
 client = MlflowClient()
 

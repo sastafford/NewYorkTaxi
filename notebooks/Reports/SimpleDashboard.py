@@ -31,7 +31,7 @@ silverDeltaDirectory = "/mnt/xferblob/silver/delta/nyc-taxi-silver"
 
 # COMMAND ----------
 
-# MAGIC %md ###Read in the Gold Table of Data
+# MAGIC %md ###Setup and Read in the Gold Table of Data
 
 # COMMAND ----------
 
@@ -56,15 +56,15 @@ display(dfPrettyMaxDate)
 
 # COMMAND ----------
 
-windowDF = goldDF.select(col("vendorID"), col("pickupZone"), col("tripDistance"), col("totalAmount"), col("pickupDate"), col("pickupDateTime"), col("sourceDataset"), window(col("pickupDateTime").cast("timestamp"), "60 minutes"))
+windowDF = goldDF.select(col("vendorID"), col("pickupZone"), col("tripDistance"), col("totalAmount"), col("tipAmount"), col("tip_alert"), col("pickupDate"), col("pickupDateTime"), col("sourceDataset"), window(col("pickupDateTime").cast("timestamp"), "60 minutes"))
 
 # COMMAND ----------
 
-# MAGIC %md ###Total the trips per hour
+# MAGIC %md #####Total the trips per hour
 
 # COMMAND ----------
 
-hourlyCountDF = windowDF.groupBy((date_format(col("window.end"), "MM-dd HH:mm").alias("endLabel")), "window.end", "sourceDataset").count()
+hourlyCountDF = windowDF.groupBy(date_format(col("window.end"), "MM-dd HH:mm").alias("endLabel")).count()
 
 # COMMAND ----------
 
@@ -82,17 +82,17 @@ hourlyCountDF = windowDF.groupBy((date_format(col("window.end"), "MM-dd HH:mm").
 
 # COMMAND ----------
 
-# MAGIC %md ###Total the trips per day
+# MAGIC %md #####Total the trips per day
 
 # COMMAND ----------
 
-dailyCountDF = goldDF.groupBy("pickupDate", "sourceDataset").count()
+dailyCountDF = goldDF.groupBy("tip_alert", "pickupZone").count()
 
 # COMMAND ----------
 
-# MAGIC %md ###Plot the number of trips
+# MAGIC %md ###Plot the trips
 # MAGIC - First plot is the trips in the last 24 hours
-# MAGIC - Second plot is the trips over a period of days
+# MAGIC - Second plot is the count of trips per pickupZone
 
 # COMMAND ----------
 
@@ -102,59 +102,239 @@ dailyCountDF = goldDF.groupBy("pickupDate", "sourceDataset").count()
 
 # COMMAND ----------
 
-display(hourlyCountDF.orderBy('endLabel', ascending=False).limit(24).sort("end"))
+display(hourlyCountDF.orderBy('endLabel', ascending=False).limit(24).sort("endLabel"))
 
 # COMMAND ----------
 
-display(dailyCountDF.orderBy("pickupDate", ascending=False).limit(7).sort("pickupDate"))
+# MAGIC %md ###Show the total number of rides per day and if they triggered a tip alert
 
 # COMMAND ----------
 
-# MAGIC %md ###Show the history of changes to the Detla Tables
+display(dailyCountDF.orderBy('count', ascending=False))
+
+# COMMAND ----------
+
+#from pyspark.sql.functions import first
+#pivotDF = dailyCountDF.groupBy("pickupZone").pivot("tip_alert").agg(first('count'))
+
+# COMMAND ----------
+
+# MAGIC %md #Use the Delta Lake history to view the changes to the tables over time
 # MAGIC - Use the last column, operation metrics, to see the number of incoming records
 
 # COMMAND ----------
 
 from delta.tables import *
+from pyspark.sql.types import IntegerType
+
+# COMMAND ----------
+
+def getStatus(deltaHistoryDF) :
+  if (deltaHistoryDF.filter(deltaHistoryDF.operation.like('%STREAMING%')).orderBy("timestamp", ascending=False).limit(1).select('numOutputRows').collect()[0][0] > 0) :
+     return 'green'
+  else :
+    return 'red'
+
+# COMMAND ----------
+
+# MAGIC %md ##Look at the Bronze Table for the Yellow Dataset
 
 # COMMAND ----------
 
 yellowDeltaTable = DeltaTable.forPath(spark, yellowDeltaDirectory)
 fullYellowHistoryDF = yellowDeltaTable.history()    # get the full history of the table
 
-display(fullYellowHistoryDF)
+statsYellowHistoryDF = fullYellowHistoryDF.select("version", "timestamp", "operation", col("operationMetrics.numOutputRows").cast(IntegerType()))
+
+displayHTML('<b>Bronze Yellow Table Status</b><br><svg width="100" height="100">\
+   <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill='+getStatus(statsYellowHistoryDF)+' />\
+   Sorry, your browser does not support inline SVG.\
+</svg>')
+
+# COMMAND ----------
+
+#display(fullYellowHistoryDF)
+
+# COMMAND ----------
+
+display(statsYellowHistoryDF)
+
+# COMMAND ----------
+
+# MAGIC %md #####A view of the Delta Lake Optimze function running periodically
+
+# COMMAND ----------
+
+display(statsYellowHistoryDF.filter(statsYellowHistoryDF.operation.like('%OPTIMIZE%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md #####Show the number of rows being added to the table over time
+
+# COMMAND ----------
+
+display(statsYellowHistoryDF.filter(statsYellowHistoryDF.operation.like('%STREAMING%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md ##Look at the Bronze Table for the Green Dataset
+# MAGIC - This dataset is significantly smaller than the yellow dataset
 
 # COMMAND ----------
 
 greenDeltaTable = DeltaTable.forPath(spark, greenDeltaDirectory)
 fullGreenHistoryDF = greenDeltaTable.history()    # get the full history of the table
 
+statsGreenHistoryDF = fullGreenHistoryDF.select("version", "timestamp", "operation", col("operationMetrics.numOutputRows").cast(IntegerType()))
+
+displayHTML('<b>Bronze Green Table Status</b><br><svg width="100" height="100">\
+   <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill='+getStatus(statsGreenHistoryDF)+' />\
+   Sorry, your browser does not support inline SVG.\
+</svg>')
+
+# COMMAND ----------
+
 display(fullGreenHistoryDF)
+
+# COMMAND ----------
+
+# MAGIC %md #####A view of the Delta Lake Optimze function running periodically
+
+# COMMAND ----------
+
+display(statsGreenHistoryDF.filter(statsGreenHistoryDF.operation.like('%OPTIMIZE%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md #####Show the number of rows being added to the table over time
+
+# COMMAND ----------
+
+display(statsGreenHistoryDF.filter(statsGreenHistoryDF.operation.like('%STREAMING%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md ##Look at the Bronze Table for the For Hire Vehicle Dataset
+# MAGIC - This dataset did not make it to the silver table because it does not contain key information required for inclusion
 
 # COMMAND ----------
 
 fhvDeltaTable = DeltaTable.forPath(spark, fhvDeltaDirectory)
 fullFhvHistoryDF = fhvDeltaTable.history()    # get the full history of the table
+statsFhvHistoryDF = fullFhvHistoryDF.select("version", "timestamp", "operation", col("operationMetrics.numOutputRows").cast(IntegerType()))
+
+displayHTML('<b>Bronze For Hire Vehicle Table Status</b><br><svg width="100" height="100">\
+   <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill='+getStatus(statsFhvHistoryDF)+' />\
+   Sorry, your browser does not support inline SVG.\
+</svg>')
+
+# COMMAND ----------
 
 display(fullFhvHistoryDF)
 
 # COMMAND ----------
 
+display(statsFhvHistoryDF)
+
+# COMMAND ----------
+
+# MAGIC %md #####A view of the Delta Lake Optimze function running periodically
+
+# COMMAND ----------
+
+display(statsFhvHistoryDF.filter(statsFhvHistoryDF.operation.like('%OPTIMIZE%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md #####Show the number of rows being added to the table over time
+
+# COMMAND ----------
+
+display(statsFhvHistoryDF.filter(statsFhvHistoryDF.operation.like('%STREAMING%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md ##Look at the Silver Table
+
+# COMMAND ----------
+
 silverDeltaTable = DeltaTable.forPath(spark, silverDeltaDirectory)
 fullSilverHistoryDF = silverDeltaTable.history()    # get the full history of the table
+statsSilverHistoryDF = fullSilverHistoryDF.select("version", "timestamp", "operation", col("operationMetrics.numOutputRows").cast(IntegerType()))
+
+displayHTML('<b>Silver Table Status</b><br><svg width="100" height="100">\
+   <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill='+getStatus(statsSilverHistoryDF)+' />\
+   Sorry, your browser does not support inline SVG.\
+</svg>')
+
+# COMMAND ----------
 
 display(fullSilverHistoryDF)
 
 # COMMAND ----------
 
+display(statsSilverHistoryDF)
+
+# COMMAND ----------
+
+# MAGIC %md #####A view of the Delta Lake Optimze function running periodically
+
+# COMMAND ----------
+
+display(statsSilverHistoryDF.filter(statsSilverHistoryDF.operation.like('%OPTIMIZE%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md #####Show the number of rows being added to the table over time
+
+# COMMAND ----------
+
+display(statsSilverHistoryDF.filter(statsSilverHistoryDF.operation.like('%STREAMING%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md ##Look at the Gold Table
+# MAGIC - No optimization needed on the table yet
+# MAGIC - Number of records incoming are much lower
+
+# COMMAND ----------
+
 goldDeltaTable = DeltaTable.forPath(spark, goldDeltaDirectory)
 fullGoldHistoryDF = goldDeltaTable.history()    # get the full history of the table
+statsGoldHistoryDF = fullGoldHistoryDF.select("version", "timestamp", "operation", col("operationMetrics.numOutputRows").cast(IntegerType()))
+
+displayHTML('<b>Gold Table Status</b><br><svg width="100" height="100">\
+   <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill='+getStatus(statsGoldHistoryDF)+' />\
+   Sorry, your browser does not support inline SVG.\
+</svg>')
+
+# COMMAND ----------
 
 display(fullGoldHistoryDF)
 
 # COMMAND ----------
 
-# MAGIC %md ###Stop the streaming in of data
+display(statsGoldHistoryDF)
+
+# COMMAND ----------
+
+# MAGIC %md #####A view of the Delta Lake Optimze function running periodically
+
+# COMMAND ----------
+
+display(statsGoldHistoryDF.filter(statsGoldHistoryDF.operation.like('%OPTIMIZE%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md #####Show the number of rows being added to the table over time
+
+# COMMAND ----------
+
+display(statsGoldHistoryDF.filter(statsGoldHistoryDF.operation.like('%STREAMING%')).withColumn("prettyTimestamp", date_format(col("timestamp"), "MMM-dd HH:mm")).sort("timestamp"))
+
+# COMMAND ----------
+
+# MAGIC %md #Stop the streams
 # MAGIC - UNCOMMENT WHEN WANT TO STOP STREAMS - Iterates over all active streams - Can also press Stop Execution at the top.
 
 # COMMAND ----------
@@ -163,31 +343,3 @@ display(fullGoldHistoryDF)
 # for s in spark.streams.active:  # Iterate over all active streams
 #    print("Stopping "+s.name)   # A little extra feedback
 #    s.stop()                    # Stop the stream       
-
-# COMMAND ----------
-
-yellowCountDF = yellowBronzeDF.select(col("tpepPickupDateTime"), window(col("tpepPickupDateTime").cast("timestamp"), "10 minutes"))
-
-# COMMAND ----------
-
-plotYellowDF = yellowCountDF.groupBy((date_format(col("window.end"), "MM-dd HH:mm").alias("endLabel")), "window.end").count()
-
-# COMMAND ----------
-
-greenCountDF = greenBronzeDF.select(col("lpepPickupDateTime"), window(col("lpepPickupDateTime").cast("timestamp"), "10 minutes"))
-
-# COMMAND ----------
-
-plotGreenDF = greenCountDF.groupBy((date_format(col("window.end"), "MM-dd HH:mm").alias("endLabel")), "window.end").count()
-
-# COMMAND ----------
-
-fhvCountDF = fhvBronzeDF.select(col("pickupDateTime"), window(col("pickupDateTime").cast("timestamp"), "10 minutes"))
-
-# COMMAND ----------
-
-plotFhvDF = fhvCountDF.groupBy((date_format(col("window.end"), "MM-dd HH:mm").alias("endLabel")), "window.end").count()
-
-# COMMAND ----------
-
-#display(plotYellowDF.orderBy('endLabel', ascending=False).limit(36).sort("end"))
